@@ -1,4 +1,5 @@
 import {buildBlurFilters} from './blur-filters.mjs';
+import {createFloatingControls} from './floating-controls.mjs';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,6 +12,7 @@ import {renameVideo,trashVideo,restoreVideo} from './video-actions.mjs';
 import {pipeline} from 'node:stream/promises';
 import {Transform} from 'node:stream';
 const root=path.dirname(fileURLToPath(import.meta.url)), storage=createStorage(root);
+const floating=createFloatingControls(root);
 fs.mkdirSync(path.join(root,'recordings'),{recursive:true});
 let choosingFolder=false;
 let thumbnailQueue=Promise.resolve();
@@ -30,6 +32,13 @@ http.createServer(async(req,res)=>{try{
  if(req.headers.host!=='localhost:4783'&&req.headers.host!=='127.0.0.1:4783')return json(res,{error:'Invalid host'},403);
  if(req.method==='POST'&&req.headers.origin!=='http://localhost:4783'&&req.headers.origin!=='http://127.0.0.1:4783')return json(res,{error:'Invalid origin'},403);
  if(url.pathname==='/api/status')return json(res,{ffmpeg:!!find('ffmpeg.exe'),captions:!!find('whisper-cli.exe')&&!!find('ggml-base.en.bin')});
+ if(req.method==='POST'&&url.pathname.startsWith('/api/floating/')){
+  const data=JSON.parse((await body(req,2048)).toString());
+  if(url.pathname==='/api/floating/start')return json(res,await floating.start());
+  if(url.pathname==='/api/floating/sync')return json(res,floating.sync(data));
+  if(url.pathname==='/api/floating/end')return json(res,floating.end(data.token));
+  return json(res,{error:'Not found'},404);
+ }
  if(req.method==='GET'&&url.pathname==='/api/storage')return json(res,{directory:storage.directory});
  if(req.method==='GET'&&url.pathname==='/api/library')return json(res,{videos:listVideos(storage,root),directory:storage.directory});
  if(req.method==='POST'&&['/api/library/rename','/api/library/delete','/api/library/restore'].includes(url.pathname)){

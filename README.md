@@ -28,6 +28,10 @@ Captions are editable SRT sidecars; they are not burned into the MP4. Download t
 
 Microphone and computer audio toggle independently during recording. Webcam can be enabled or disabled during recording. Computer sound availability depends on the chosen browser and capture source. The browser must share an audio track before recording; a missing track cannot be added during capture. Selecting a new source requires stopping and reselecting. Webcam is composited in the lower right.
 
+After the countdown, **Pause** and **Stop** stay visible in the sticky recording header. Pause freezes the recording timer; **Resume** continues the same session. Stop saves the session for review, including when paused. The browser's “localhost is sharing your screen” bar belongs to Edge or Chrome; use its **Hide** button to dismiss it while sharing. Root cannot remove that browser indicator.
+
+On Windows, recording also opens a small **always-on-top desktop toolbar** with a timer, Pause/Resume, and Stop. Use it over the window you are recording without returning to Root. Drag its title bar to reposition it or move it to another monitor. It opens on the monitor containing the pointer when recording starts. Windows capture exclusion is requested so the toolbar stays out of supported screen captures; capture behavior depends on the capture source. The toolbar closes when recording ends or Root disconnects. If it cannot open, the controls inside Root remain available. The helper builds automatically from `desktop/RecordingControls.cs` using the Windows .NET Framework compiler.
+
 ## Local data and practical limits
 
 ### Import an existing video

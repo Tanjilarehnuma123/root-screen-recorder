@@ -60,3 +60,10 @@ aside .brand .dot,aside .secure,.dot{color:var(--root-accent)}
 .countdown-dialog::backdrop{background:#020812b3;backdrop-filter:blur(4px)}
 .countdown-dialog h2{font-size:20px}.countdown-dialog p{font-size:13px;line-height:1.8;color:#a7b3c6}.countdown-number{font-size:80px;line-height:1.4;font-weight:700;color:#8ed6b5;font-variant-numeric:tabular-nums}
 .details-tool-tabs .tool-pill>span,.badge,.folder-symbol,.library-tabs b{background:#16352d}
+#recordingTransportSlot:empty{display:none}
+.session-mode #recordingTransportSlot .transport{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:12px 0 16px;flex-wrap:wrap}
+#recordingTransportSlot .timer{color:#dceae4;font-size:18px}
+#recordingTransportSlot button{min-height:44px;min-width:110px}
+#recordingTransportSlot #pause{background:#16352d;border:1px solid #386b55;color:#b9ebd4}
+#recordingTransportSlot #stop{background:var(--root-green);color:#fff}
+.library-mode #recordingTransportSlot{display:none}

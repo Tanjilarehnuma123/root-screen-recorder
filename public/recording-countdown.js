@@ -4,11 +4,12 @@ export async function waitForCountdown({seconds=5,signal,tick,now=()=>performanc
 }
 export async function recordingCountdown(stream){
  const controller=new AbortController(),track=stream.getVideoTracks()[0];
+ const title=document.title;
  if(!track||track.readyState!=='live')throw Error('Choose a screen to share before recording.');
  const drawer=document.getElementById('recordingDrawer');if(drawer?.open)document.getElementById('closeRecorder').click();
  const dialog=document.createElement('dialog');dialog.className='countdown-dialog';dialog.setAttribute('aria-labelledby','countdownTitle');
- dialog.innerHTML='<h2 id="countdownTitle">Get ready to record</h2><div class="countdown-number" aria-live="polite"></div><p>Switch to the window or screen you want to record.<br>Recording starts automatically after 5 seconds.</p><button type="button" class="secondary">Cancel</button>';
+ dialog.innerHTML='<h2 id="countdownTitle">Get ready to record</h2><div class="countdown-number" aria-live="polite">5</div><p>Switch to the window or screen you want to record.<br>Recording starts automatically after 5 seconds.</p><button type="button" class="secondary">Cancel</button>';
  const cancel=()=>controller.abort();dialog.querySelector('button').onclick=cancel;dialog.oncancel=event=>{event.preventDefault();cancel();};track.addEventListener('ended',cancel);document.body.append(dialog);dialog.showModal();
- try{await waitForCountdown({signal:controller.signal,tick:value=>{dialog.querySelector('.countdown-number').textContent=value;}});if(track.readyState!=='live')throw Error('Screen sharing stopped before recording started.');}
- finally{track.removeEventListener('ended',cancel);dialog.close();dialog.remove();}
+ try{await waitForCountdown({seconds:5,signal:controller.signal,tick:value=>{dialog.querySelector('.countdown-number').textContent=value;document.title=`Recording starts in ${value} · Root`;}});if(track.readyState!=='live')throw Error('Screen sharing stopped before recording started.');}
+ finally{document.title=title;track.removeEventListener('ended',cancel);dialog.close();dialog.remove();}
 }

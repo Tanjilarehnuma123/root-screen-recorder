@@ -26,9 +26,10 @@ const sessionTop=document.createElement('div');sessionTop.className='session-hea
 document.querySelector('.layout').before(sessionTop);
 const sourceObserver=new MutationObserver(()=>{$('drawerSourceLabel').textContent=$('source').textContent;});sourceObserver.observe($('source'),{childList:true,characterData:true,subtree:true});
 function showSession(){document.body.classList.remove('library-mode');document.body.classList.add('session-mode');}
-function closeDrawer(){dialog.close();studio.append(transport);}
+function restoreTransport(){const active=!$('stop').hidden;const slot=document.getElementById('recordingTransportSlot');(active&&slot?slot:studio).append(transport);}
+function closeDrawer(){dialog.close();restoreTransport();}
 function openRecorder(){closeMenu();$('drawerTransportSlot').append(transport);dialog.showModal();}
-$('closeRecorder').onclick=closeDrawer;dialog.addEventListener('cancel',()=>{studio.append(transport);});
+$('closeRecorder').onclick=closeDrawer;dialog.addEventListener('cancel',restoreTransport);
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDrawer();}});
 $('recordingOptions').onclick=openRecorder;
 const editorNewButton=[...$('editor').querySelectorAll('button')].find(button=>button.textContent.includes('New recording'));if(editorNewButton)editorNewButton.onclick=openRecorder;
@@ -39,7 +40,7 @@ $('newVideo').onclick=()=>{const open=$('newVideoMenu').hidden;$('newVideoMenu')
 document.addEventListener('click',e=>{if(!e.target.closest('.new-video-wrap'))closeMenu();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();if(e.ctrlKey&&e.key.toLowerCase()==='k'){e.preventDefault();$('librarySearch').focus();}});
 $('newRecording').onclick=$('emptyRecord').onclick=openRecorder;
 $('importFromLibrary').onclick=()=>{closeMenu();$('importVideo').click();};
-const statusObserver=new MutationObserver(()=>{const status=$('state').textContent;if(status==='● Recording'||status==='Paused'||status==='Ready to review'||status==='Ready to edit'){showSession();if(dialog.open)closeDrawer();}});statusObserver.observe($('state'),{childList:true,subtree:true,characterData:true});
+const statusObserver=new MutationObserver(()=>{const status=$('state').textContent;if(status==='● Recording'||status==='Paused'||status==='Saving recording'||status==='Ready to review'||status==='Ready to edit'){showSession();if(dialog.open)closeDrawer();restoreTransport();}});statusObserver.observe($('state'),{childList:true,subtree:true,characterData:true});
 let videos=[],observer;
 const duration=seconds=>!Number.isFinite(seconds)?'':`${Math.floor(seconds/60)}:${Math.floor(seconds%60).toString().padStart(2,'0')}`;
 function render(){
