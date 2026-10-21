@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
+const files=walk('tools'),ffmpeg=files.find(f=>f.endsWith('ffmpeg.exe')),probe=files.find(f=>f.endsWith('ffprobe.exe'));
+const source='recordings/import-test.mov',copy='recordings/import-check.mp4';
+execFileSync(ffmpeg,['-y','-f','lavfi','-i','testsrc=size=241x321:rate=10','-t','1','-c:v','libx264','-pix_fmt','yuv444p',source],{stdio:'ignore'});
+const request=async(endpoint,body,raw=false)=>{
+ const r=await fetch('http://127.0.0.1:4783'+endpoint,{method:'POST',headers:{Origin:'http://localhost:4783','Content-Type':raw?'application/octet-stream':'application/json'},body:raw?body:JSON.stringify(body)});const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;
+};
+const imported=await request('/api/import',fs.readFileSync(source),true);assert.ok(imported.id);assert.ok(imported.url.endsWith('.mp4'));
+let response=await fetch('http://127.0.0.1:4783'+imported.url,{headers:{Range:'bytes=0-99'}});assert.equal(response.status,206);assert.equal((await response.arrayBuffer()).byteLength,100);
+const exported=await request('/api/export',{id:imported.id,regions:[{x:.1,y:.1,w:.3,h:.3}]});
+response=await fetch('http://127.0.0.1:4783'+exported.url);fs.writeFileSync(copy,Buffer.from(await response.arrayBuffer()));
+const info=JSON.parse(execFileSync(probe,['-v','quiet','-show_streams','-of','json',copy],{encoding:'utf8'}));assert.equal(info.streams[0].codec_name,'h264');assert.equal(info.streams[0].width%2,0);assert.equal(info.streams[0].height%2,0);assert.ok(info.streams[0].height>info.streams[0].width);console.log('PASS portrait MOV import, no audio, preview range, blur export, even output dimensions');
+const invalid=await fetch('http://127.0.0.1:4783/api/import',{method:'POST',headers:{Origin:'http://localhost:4783'},body:'not a video'});assert.equal(invalid.status,400);console.log('PASS invalid video rejection');
+const audio=await request('/api/import',fs.readFileSync('recordings/test.webm'),true);
+const captions=await request('/api/captions',{id:audio.id});assert.equal(typeof captions.srt,'string');console.log('PASS WebM import with audio and local caption processing');
+console.log(JSON.stringify({testFiles:[imported.id+'.mp4',exported.url.split('/').pop(),audio.id+'.mp4',audio.id+'.wav',audio.id+'.srt'],directory:imported.directory}));
